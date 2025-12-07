@@ -9,12 +9,24 @@ const bookingsRoute = require("./routes/bookings");
 
 const app = express();
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://globetrek-lac.vercel.app",  // Vercel frontend
+];
+
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS: " + origin), false);
+      }
+    },
     credentials: true,
   })
 );
+
 app.use(express.json());
 
 app.get("/", (req, res) => {
