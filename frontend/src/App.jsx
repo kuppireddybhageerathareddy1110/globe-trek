@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import "./style.css";
 
-const API_BASE = "http://localhost:5000/api";
+// const API_BASE = "http://localhost:5000/api";
+const API_BASE = "https://globe-trek.onrender.com/api";
 
 function App() {
   const [destinations, setDestinations] = useState([]);
