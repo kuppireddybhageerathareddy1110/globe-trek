@@ -2,7 +2,7 @@
 
 GlobeTrek is a full-stack travel booking application with a Next.js frontend, an Express API, JWT authentication, booking management, and PostgreSQL persistence.
 
-The frontend has been reorganized from Vite React into a Next.js App Router app with a more polished travel-booking experience: glassmorphism surfaces, brutalist CTA treatment, animated hero artwork, destination filtering, saved-trip state, a budget planner, auth flow, and dashboard summary cards.
+The frontend has been reorganized from Vite React into a Next.js App Router app with a more polished travel-booking experience: glassmorphism surfaces, brutalist CTA treatment, animated hero artwork, destination filtering, saved-trip state, a budget planner, demo authentication, a travel assistant, prep tools, and dashboard summary cards.
 
 ## Live Services
 
@@ -16,9 +16,12 @@ The frontend has been reorganized from Vite React into a Next.js App Router app 
 - PostgreSQL database access through `pg`
 - JWT-protected booking endpoints
 - Destination search with API fallback data for local demos
-- Theme toggle with dark and light visual systems
+- Theme switcher with dark, light, and pure white visual systems
 - Interactive planner for travelers, dates, trip length, notes, and estimated cost
 - Saved trips persisted in `localStorage`
+- Demo traveler/admin login that works without backend credentials
+- Travel assistant for route suggestions, packing help, and saved-trip comparisons
+- Compare board, packing checklist, and route-readiness meter
 - User auth panel wired to the existing `/api/auth/login` and `/api/auth/register` endpoints
 - Dashboard snapshot for saved trips and authenticated bookings
 - Responsive layout with reduced-motion support
@@ -37,27 +40,27 @@ The frontend has been reorganized from Vite React into a Next.js App Router app 
 
 ```text
 globe-trek/
-├── backend/
-│   ├── db.js
-│   ├── server.js
-│   └── routes/
-│       ├── auth.js
-│       ├── bookings.js
-│       └── destinations.js
-├── frontend/
-│   ├── app/
-│   │   ├── globals.css
-│   │   ├── layout.js
-│   │   └── page.js
-│   ├── components/
-│   │   └── GlobeTrekExperience.js
-│   ├── lib/
-│   │   └── api.js
-│   ├── next.config.mjs
-│   └── package.json
-├── ARCHITECTURE.md
-├── package.json
-└── README.md
+|-- backend/
+|   |-- db.js
+|   |-- server.js
+|   `-- routes/
+|       |-- auth.js
+|       |-- bookings.js
+|       `-- destinations.js
+|-- frontend/
+|   |-- app/
+|   |   |-- globals.css
+|   |   |-- layout.js
+|   |   `-- page.js
+|   |-- components/
+|   |   `-- GlobeTrekExperience.js
+|   |-- lib/
+|   |   `-- api.js
+|   |-- next.config.mjs
+|   `-- package.json
+|-- ARCHITECTURE.md
+|-- package.json
+`-- README.md
 ```
 
 ## Environment Variables
@@ -161,17 +164,34 @@ npm run dev:backend
 - Calculate total and daily estimates instantly.
 - Submit booking details to the protected booking endpoint.
 
+### Trip Prep Tools
+
+- Compare saved trips against curated fallback recommendations.
+- Track packing progress with an interactive checklist.
+- Review a route-readiness meter before booking.
+- Ask the assistant for prep guidance from any part of the page.
+
 ### Auth and Dashboard
 
 - Login and registration use the existing backend API.
+- Demo login works without backend access:
+  - Traveler: `demo@globetrek.test` / `demo123`
+  - Admin: `admin@globetrek.test` / `admin123`
 - Auth state and JWT are stored in `localStorage`.
 - Saved trips are persisted locally.
 - Dashboard cards summarize saved trips and authenticated bookings.
+
+### Travel Assistant
+
+- Opens as a floating assistant panel.
+- Supports starter prompts for culture trips, packing, saved-trip comparison, and relaxing routes.
+- Uses local rule-based responses so it works offline and does not require an AI API key.
 
 ### Visual System
 
 - Glassmorphism panels use blur, translucent surfaces, and soft gradients.
 - Brutalist actions use strong borders, hard shadows, and acid accent colors.
+- White mode uses a true white background while preserving the same component geometry.
 - Motion includes hero reveal, orbit animation, card entrance, hover scale, story cycling, and floating tickets.
 - `prefers-reduced-motion` is respected.
 
@@ -198,6 +218,10 @@ npm run build
 - Visit `http://localhost:3000`
 - Test destination search and filters
 - Test theme toggle
+- Cycle through dark, light, and white themes
 - Save a trip and confirm dashboard count updates
+- Use demo credentials to login without backend data
+- Open the travel assistant and submit a prompt
+- Toggle packing checklist items and confirm readiness UI updates
 - Try booking while logged out and confirm the login-required notice
 - Login against a running backend and confirm booking/dashboard calls work

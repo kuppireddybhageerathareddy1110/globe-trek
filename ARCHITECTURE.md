@@ -16,6 +16,7 @@ flowchart LR
   API --> Auth["JWT auth middleware"]
   API --> DB["PostgreSQL database"]
   Next --> Storage["localStorage: user, token, saved trips"]
+  Next --> Assistant["Local travel assistant"]
 ```
 
 ## Frontend Architecture
@@ -40,6 +41,10 @@ The frontend uses the Next.js App Router:
 - auth token persistence
 - saved trip persistence
 - dashboard data fetches
+- demo credential login
+- assistant message state
+- packing checklist state
+- trip comparison state
 
 ## Backend Architecture
 
@@ -117,6 +122,15 @@ sequenceDiagram
   F->>F: Store user/token in localStorage
 ```
 
+Demo credentials bypass the network and create local demo sessions:
+
+| Role | Email | Password | Token |
+| --- | --- | --- | --- |
+| Traveler | `demo@globetrek.test` | `demo123` | `demo-token-user` |
+| Admin | `admin@globetrek.test` | `admin123` | `demo-token-admin` |
+
+The demo path is intentionally frontend-only. Real production authentication still goes through `/api/auth/login`.
+
 ### Booking
 
 ```mermaid
@@ -142,22 +156,38 @@ sequenceDiagram
 | Destination list | Frontend | In-memory, API-backed |
 | Selected destination | Frontend | In-memory |
 | Planner controls | Frontend | In-memory |
-| Theme | Frontend | DOM dataset |
+| Theme | Frontend | DOM dataset: `dark`, `light`, `white` |
 | Saved trips | Frontend | `localStorage` |
 | Auth token | Frontend | `localStorage` |
+| Assistant messages | Frontend | In-memory |
+| Packing checklist | Frontend | In-memory |
 | Users/bookings | Backend | PostgreSQL |
 
 ## Styling System
 
 The UI uses a small CSS-token system in `frontend/app/globals.css`:
 
-- dark/light theme variables
+- dark/light/white theme variables
 - glass surfaces through translucent backgrounds and `backdrop-filter`
 - brutalist CTA/card primitives through borders and hard shadows
 - responsive grid rules
 - reduced-motion safety
 
 Animations are CSS-based and do not require extra runtime packages.
+
+## Assistant Architecture
+
+The travel assistant is a local, deterministic UI feature. It does not call a model provider. Prompt handling lives in `getAssistantReply()` inside `frontend/components/GlobeTrekExperience.js`.
+
+Supported response categories:
+
+- packing advice
+- saved-trip comparison
+- relaxing/wellness route suggestions
+- compact culture itinerary suggestions
+- fallback recommendation for the currently selected destination
+
+This keeps the feature safe for local demos and avoids shipping API keys to the browser. If a real AI assistant is added later, it should be implemented through a backend route or server action with server-held credentials.
 
 ## Deployment Architecture
 

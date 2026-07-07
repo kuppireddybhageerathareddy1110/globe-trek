@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
@@ -6,6 +6,43 @@ import { API_BASE, fallbackDestinations, fetchDestinations } from "@/lib/api";
 
 const navItems = ["Destinations", "Planner", "Stories", "Dashboard"];
 const tripMoods = ["All", "Luxury", "Adventure", "Culture", "Wellness"];
+const themeModes = ["dark", "light", "white"];
+const demoAccounts = [
+  {
+    role: "user",
+    label: "Demo traveler",
+    email: "demo@globetrek.test",
+    password: "demo123",
+    user: { id: 9001, name: "Demo Traveler", email: "demo@globetrek.test", role: "user" },
+  },
+  {
+    role: "admin",
+    label: "Demo admin",
+    email: "admin@globetrek.test",
+    password: "admin123",
+    user: { id: 9002, name: "Demo Admin", email: "admin@globetrek.test", role: "admin" },
+  },
+];
+const assistantStarters = [
+  "Build me a 5 day culture trip",
+  "What should I pack?",
+  "Compare saved trips",
+  "Find a relaxing route",
+];
+const packingItems = [
+  "Passport + digital copy",
+  "Universal adapter",
+  "Light rain shell",
+  "Offline maps",
+  "Travel insurance",
+  "Comfort walking shoes",
+];
+const dealAlerts = [
+  "Kyoto flash fare dropped 12% this week.",
+  "Iceland winter seats are nearly full.",
+  "Bali villa upgrades available for couples.",
+];
+const routeMilestones = ["Discover", "Compare", "Prepare", "Book"];
 
 function money(value) {
   return new Intl.NumberFormat("en-US", {
@@ -13,6 +50,32 @@ function money(value) {
     currency: "USD",
     maximumFractionDigits: 0,
   }).format(Number(value || 0));
+}
+
+function getThemeLabel(theme) {
+  if (theme === "white") return "White";
+  if (theme === "light") return "Light";
+  return "Dark";
+}
+
+function getAssistantReply(message, featured, savedTrips) {
+  const text = message.toLowerCase();
+  if (text.includes("pack")) {
+    return `For ${featured.name}, pack layered outfits, walking shoes, a universal adapter, offline maps, and a small medical kit. Keep documents in both cloud and paper copy.`;
+  }
+  if (text.includes("compare") || text.includes("saved")) {
+    const trips = savedTrips.length ? savedTrips : fallbackDestinations.slice(0, 3);
+    return `Best comparison set: ${trips
+      .map((trip) => `${trip.name} (${money(trip.price)})`)
+      .join(", ")}. Pick adventure for energy, culture for depth, wellness for slower pacing.`;
+  }
+  if (text.includes("relax") || text.includes("wellness")) {
+    return "Choose Bali Blue Reset. It has the lowest planning friction, wellness pacing, flexible beach days, and a lower daily estimate than the long-haul adventure routes.";
+  }
+  if (text.includes("culture") || text.includes("5 day")) {
+    return "Use Marrakech Atlas Circuit for a compact 5 day culture plan: day 1 medina, day 2 food + souks, day 3 Atlas route, day 4 desert camp, day 5 hammam and return.";
+  }
+  return `I would start with ${featured.name}: ${featured.days || 6} days, ${featured.location}, around ${money(featured.price)} per traveler. Save it, compare one alternate, then confirm dates in the planner.`;
 }
 
 function Icon({ name }) {
@@ -40,26 +103,44 @@ export default function GlobeTrekExperience() {
   const [travelers, setTravelers] = useState(2);
   const [days, setDays] = useState(6);
   const [activeStory, setActiveStory] = useState(0);
-  const [savedTrips, setSavedTrips] = useState(() => {
-    if (typeof window === "undefined") return [];
-    const storedTrips = localStorage.getItem("globetrek:savedTrips");
-    return storedTrips ? JSON.parse(storedTrips) : [];
-  });
+  const [activeDeal, setActiveDeal] = useState(0);
+  const [savedTrips, setSavedTrips] = useState([]);
   const [view, setView] = useState("home");
-  const [user, setUser] = useState(() => {
-    if (typeof window === "undefined") return null;
-    const storedUser = localStorage.getItem("globetrek:user");
-    return storedUser ? JSON.parse(storedUser) : null;
-  });
-  const [token, setToken] = useState(() => {
-    if (typeof window === "undefined") return "";
-    return localStorage.getItem("globetrek:token") || "";
-  });
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState("");
   const [notice, setNotice] = useState("");
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const [assistantInput, setAssistantInput] = useState("");
+  const [assistantMessages, setAssistantMessages] = useState([
+    {
+      role: "assistant",
+      content:
+        "I can suggest routes, compare saved trips, build a day plan, or help you pack.",
+    },
+  ]);
+  const [checkedPacking, setCheckedPacking] = useState(["Passport + digital copy"]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  useEffect(() => {
+    const restoreSession = window.setTimeout(() => {
+      try {
+        const storedTrips = localStorage.getItem("globetrek:savedTrips");
+        const storedUser = localStorage.getItem("globetrek:user");
+        const storedToken = localStorage.getItem("globetrek:token");
+        if (storedTrips) setSavedTrips(JSON.parse(storedTrips));
+        if (storedUser) setUser(JSON.parse(storedUser));
+        if (storedToken) setToken(storedToken);
+      } catch {
+        setSavedTrips([]);
+        setUser(null);
+        setToken("");
+      }
+    }, 0);
+    return () => window.clearTimeout(restoreSession);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem("globetrek:savedTrips", JSON.stringify(savedTrips));
@@ -69,6 +150,14 @@ export default function GlobeTrekExperience() {
     const timer = setInterval(
       () => setActiveStory((current) => (current + 1) % 3),
       4200
+    );
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(
+      () => setActiveDeal((current) => (current + 1) % dealAlerts.length),
+      3600
     );
     return () => clearInterval(timer);
   }, []);
@@ -112,6 +201,32 @@ export default function GlobeTrekExperience() {
     localStorage.removeItem("globetrek:user");
     localStorage.removeItem("globetrek:token");
     setView("home");
+    window.setTimeout(() => window.location.reload(), 0);
+  }
+
+  function cycleTheme() {
+    setTheme((current) => themeModes[(themeModes.indexOf(current) + 1) % themeModes.length]);
+  }
+
+  function askAssistant(message = assistantInput) {
+    const cleanMessage = message.trim();
+    if (!cleanMessage) return;
+    const reply = getAssistantReply(cleanMessage, featured, savedTrips);
+    setAssistantMessages((current) => [
+      ...current,
+      { role: "user", content: cleanMessage },
+      { role: "assistant", content: reply },
+    ]);
+    setAssistantInput("");
+    setAssistantOpen(true);
+  }
+
+  function togglePacking(item) {
+    setCheckedPacking((current) =>
+      current.includes(item)
+        ? current.filter((currentItem) => currentItem !== item)
+        : [...current, item]
+    );
   }
 
   return (
@@ -132,15 +247,15 @@ export default function GlobeTrekExperience() {
           ))}
         </nav>
         <div className="nav-actions">
-          <button className="ghost-button" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-            {theme === "dark" ? "Light" : "Dark"}
+          <button className="ghost-button" onClick={cycleTheme}>
+            {getThemeLabel(theme)} theme
           </button>
           {user ? (
-            <button className="brutal-button small" onClick={handleLogout}>
+            <button className="brutal-button small" onClick={handleLogout} onPointerDown={handleLogout} type="button">
               Logout
             </button>
           ) : (
-            <button className="brutal-button small" onClick={() => setView("auth")}>
+            <button className="brutal-button small" onClick={() => setView("auth")} type="button">
               Login
             </button>
           )}
@@ -170,6 +285,13 @@ export default function GlobeTrekExperience() {
             <span>120+ routes</span>
             <span>4.9 avg rating</span>
             <span>24/7 support</span>
+            <button className="mini-action" onClick={() => askAssistant("Build me a 5 day culture trip")}>
+              Ask assistant
+            </button>
+          </div>
+          <div className="deal-ticker glass-panel" aria-live="polite">
+            <span>Live deal pulse</span>
+            <strong>{dealAlerts[activeDeal]}</strong>
           </div>
         </div>
 
@@ -195,7 +317,7 @@ export default function GlobeTrekExperience() {
           <div className="floating-ticket brutal-card">
             <Icon name="plane" />
             <span>{featured.days || days} days</span>
-            <strong>{featured.rating || 4.8}★</strong>
+            <strong>{featured.rating || 4.8}â˜…</strong>
           </div>
           <div className="orbit-ring" />
         </div>
@@ -240,7 +362,7 @@ export default function GlobeTrekExperience() {
                 <div className="card-body">
                   <div className="card-meta">
                     <span>{destination.vibe || "Signature"}</span>
-                    <span>{destination.rating || 4.7}★</span>
+                    <span>{destination.rating || 4.7}â˜…</span>
                   </div>
                   <h3>{destination.name}</h3>
                   <p>{destination.description}</p>
@@ -290,6 +412,90 @@ export default function GlobeTrekExperience() {
         />
       </section>
 
+      <section className="section route-lab glass-panel">
+        <div>
+          <p className="label">Route lab</p>
+          <h2>Animated booking pipeline with real UI state.</h2>
+          <p>
+            GlobeTrek now shows where a traveler is in the journey, from discovery
+            through booking, with milestone motion and selected-route context.
+          </p>
+        </div>
+        <div className="milestone-track">
+          {routeMilestones.map((milestone, index) => (
+            <div className="milestone" key={milestone} style={{ "--step": index }}>
+              <span>{index + 1}</span>
+              <strong>{milestone}</strong>
+              <small>
+                {index === 0 && `${filteredDestinations.length} routes loaded`}
+                {index === 1 && `${savedTrips.length} saved trips`}
+                {index === 2 && `${checkedPacking.length}/${packingItems.length} packed`}
+                {index === 3 && (token ? "Login ready" : "Login required")}
+              </small>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="section command-center">
+        <div className="section-heading">
+          <p className="label">New planning features</p>
+          <h2>Compare, prepare, and move faster before checkout.</h2>
+          <p>
+            These tools keep the booking flow practical: saved-trip comparison,
+            packing progress, route readiness, and live assistant prompts.
+          </p>
+        </div>
+        <div className="tool-grid">
+          <div className="tool-card glass-panel">
+            <div className="tool-card-top">
+              <span>Compare board</span>
+              <strong>{savedTrips.length || 3} trips</strong>
+            </div>
+            {(savedTrips.length ? savedTrips : fallbackDestinations.slice(0, 3)).map((trip) => (
+              <div className="compare-row" key={trip.id}>
+                <span>{trip.name}</span>
+                <strong>{money(trip.price)}</strong>
+              </div>
+            ))}
+          </div>
+          <div className="tool-card glass-panel">
+            <div className="tool-card-top">
+              <span>Packing checklist</span>
+              <strong>{checkedPacking.length}/{packingItems.length}</strong>
+            </div>
+            <div className="checklist">
+              {packingItems.map((item) => (
+                <button
+                  key={item}
+                  className={checkedPacking.includes(item) ? "checked" : ""}
+                  onClick={() => togglePacking(item)}
+                >
+                  <span>{checkedPacking.includes(item) ? "âœ“" : "+"}</span>
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="tool-card glass-panel readiness-card">
+            <div className="tool-card-top">
+              <span>Route readiness</span>
+              <strong>86%</strong>
+            </div>
+            <div className="readiness-meter">
+              <span style={{ width: "86%" }} />
+            </div>
+            <p>
+              Dates, traveler count, saved shortlist, and packing progress are ready.
+              Login unlocks protected booking sync.
+            </p>
+            <button className="brutal-button" onClick={() => askAssistant("What should I pack?")}>
+              Ask for prep
+            </button>
+          </div>
+        </div>
+      </section>
+
       <section className="section story-section" id="stories">
         <div className="section-heading">
           <p className="label">Traveler stories</p>
@@ -307,7 +513,7 @@ export default function GlobeTrekExperience() {
               onClick={() => setActiveStory(index)}
             >
               <span>0{index + 1}</span>
-              <p>“{quote}”</p>
+              <p>â€œ{quote}â€</p>
               <strong>{name}</strong>
             </button>
           ))}
@@ -329,16 +535,25 @@ export default function GlobeTrekExperience() {
         )}
       </section>
 
+      <TravelAssistant
+        open={assistantOpen}
+        setOpen={setAssistantOpen}
+        input={assistantInput}
+        setInput={setAssistantInput}
+        messages={assistantMessages}
+        askAssistant={askAssistant}
+      />
+
       {notice && (
         <div className="toast" role="status">
           {notice}
-          <button onClick={() => setNotice("")}>×</button>
+          <button onClick={() => setNotice("")}>Ã—</button>
         </div>
       )}
 
       <footer className="footer">
         <strong>GlobeTrek</strong>
-        <span>Next.js frontend · Express API · PostgreSQL persistence</span>
+        <span>Next.js frontend Â· Express API Â· PostgreSQL persistence</span>
       </footer>
     </main>
   );
@@ -425,8 +640,23 @@ function AuthPanel({ onLogin, setNotice }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  function loginDemo(account) {
+    setEmail(account.email);
+    setPassword(account.password);
+    onLogin(account.user, `demo-token-${account.role}`);
+    setNotice(`${account.label} logged in. Demo credentials do not require the backend.`);
+  }
+
   async function submitAuth(event) {
     event.preventDefault();
+    const demoAccount = demoAccounts.find(
+      (account) => account.email === email && account.password === password
+    );
+    if (mode === "login" && demoAccount) {
+      onLogin(demoAccount.user, `demo-token-${demoAccount.role}`);
+      setNotice(`${demoAccount.label} logged in. Demo credentials do not require the backend.`);
+      return;
+    }
     const endpoint = mode === "login" ? "/auth/login" : "/auth/register";
     try {
       const response = await fetch(`${API_BASE}${endpoint}`, {
@@ -456,6 +686,16 @@ function AuthPanel({ onLogin, setNotice }) {
   return (
     <form className="auth-panel brutal-card" onSubmit={submitAuth}>
       <h3>{mode === "login" ? "Login" : "Create account"}</h3>
+      {mode === "login" && (
+        <div className="demo-login">
+          <span>Demo credentials</span>
+          {demoAccounts.map((account) => (
+            <button key={account.email} type="button" onClick={() => loginDemo(account)}>
+              {account.label}: {account.email} / {account.password}
+            </button>
+          ))}
+        </div>
+      )}
       {mode === "register" && (
         <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Name" required />
       )}
@@ -468,6 +708,66 @@ function AuthPanel({ onLogin, setNotice }) {
         {mode === "login" ? "Need an account?" : "Already registered?"}
       </button>
     </form>
+  );
+}
+
+function TravelAssistant({
+  open,
+  setOpen,
+  input,
+  setInput,
+  messages,
+  askAssistant,
+}) {
+  return (
+    <aside className={`assistant-shell ${open ? "open" : ""}`}>
+      <button className="assistant-toggle brutal-button" onClick={() => setOpen(!open)}>
+        {open ? "Close assistant" : "Travel assistant"}
+      </button>
+      {open && (
+        <div className="assistant-panel glass-panel">
+          <div className="assistant-header">
+            <div>
+              <span className="label compact">Route AI</span>
+              <h3>GlobeTrek Assistant</h3>
+            </div>
+            <button onClick={() => setOpen(false)} aria-label="Close assistant">
+              Ã—
+            </button>
+          </div>
+          <div className="assistant-messages">
+            {messages.map((message, index) => (
+              <div className={`message ${message.role}`} key={`${message.role}-${index}`}>
+                {message.content}
+              </div>
+            ))}
+          </div>
+          <div className="assistant-starters">
+            {assistantStarters.map((starter) => (
+              <button key={starter} onClick={() => askAssistant(starter)}>
+                {starter}
+              </button>
+            ))}
+          </div>
+          <form
+            className="assistant-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              askAssistant(input);
+            }}
+          >
+            <input
+              value={input}
+              onChange={(event) => setInput(event.target.value)}
+              placeholder="Ask for a route, packing list, or comparison..."
+            />
+            <button className="brutal-button" type="submit">
+              Send
+            </button>
+          </form>
+        </div>
+      )}
+    </aside>
   );
 }
 
@@ -506,3 +806,6 @@ function DashboardSnapshot({ user, savedTrips, token }) {
     </div>
   );
 }
+
+
+
