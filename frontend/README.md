@@ -1,16 +1,30 @@
-# React + Vite
+# GlobeTrek Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Next.js App Router frontend for GlobeTrek.
 
-Currently, two official plugins are available:
+## Commands
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```sh
+npm install
+npm run dev
+npm run build
+npm run start
+```
 
-## React Compiler
+## Environment
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Optional local override:
 
-## Expanding the ESLint configuration
+```env
+NEXT_PUBLIC_API_BASE=http://localhost:5000/api
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Without the override, the app uses the deployed Render API.
+
+## Key Files
+
+- `app/layout.js`: metadata and document shell
+- `app/page.js`: home route
+- `app/globals.css`: design tokens, glassmorphism, brutalism, animation, responsive CSS
+- `components/GlobeTrekExperience.js`: main interactive UI
+- `lib/api.js`: API URL and fallback destination data

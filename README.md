@@ -1,161 +1,203 @@
+# GlobeTrek
 
+GlobeTrek is a full-stack travel booking application with a Next.js frontend, an Express API, JWT authentication, booking management, and PostgreSQL persistence.
 
----
+The frontend has been reorganized from Vite React into a Next.js App Router app with a more polished travel-booking experience: glassmorphism surfaces, brutalist CTA treatment, animated hero artwork, destination filtering, saved-trip state, a budget planner, auth flow, and dashboard summary cards.
 
-## 🌍 **GlobeTrek** — Smart Travel Booking Web App ✈️
+## Live Services
 
-Transforming the way people explore the world 🚀
+- Frontend: https://globetrek-lac.vercel.app/
+- Backend API: https://globe-trek.onrender.com/
 
-🔹 **Live Frontend** → [https://globetrek-lac.vercel.app/](https://globetrek-lac.vercel.app/)
-🔹 **Live Backend (API)** → [https://globe-trek.onrender.com/](https://globe-trek.onrender.com/)
+## Highlights
 
----
+- Next.js App Router frontend in `frontend/app`
+- Express API in `backend/`
+- PostgreSQL database access through `pg`
+- JWT-protected booking endpoints
+- Destination search with API fallback data for local demos
+- Theme toggle with dark and light visual systems
+- Interactive planner for travelers, dates, trip length, notes, and estimated cost
+- Saved trips persisted in `localStorage`
+- User auth panel wired to the existing `/api/auth/login` and `/api/auth/register` endpoints
+- Dashboard snapshot for saved trips and authenticated bookings
+- Responsive layout with reduced-motion support
 
-### 🌟 **Badges**
+## Tech Stack
 
-![React](https://img.shields.io/badge/Frontend-React-blue?style=flat-square)
-![Node.js](https://img.shields.io/badge/Backend-Node.js-green?style=flat-square)
-![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-blue?style=flat-square)
-![Express](https://img.shields.io/badge/API-Express-lightgrey?style=flat-square)
-![Vercel](https://img.shields.io/badge/Deployed%20On-Vercel-black?style=flat-square)
-![Render](https://img.shields.io/badge/Backend%20Hosting-Render-purple?style=flat-square)
+| Layer | Technology |
+| --- | --- |
+| Frontend | Next.js, React, CSS |
+| Backend | Node.js, Express |
+| Database | PostgreSQL |
+| Authentication | JWT, bcryptjs |
+| Deployment | Vercel frontend, Render backend |
 
----
+## Repository Structure
 
-### 📌 **Project Overview**
-
-GlobeTrek is a cloud-hosted travel booking platform built with a modern full-stack architecture.
-Users can browse curated travel destinations and securely book their next adventure.
-
----
-
-### 🚀 **Features**
-
-| Category            | Capabilities                                   |
-| ------------------- | ---------------------------------------------- |
-| 🔐 Authentication   | Register, Login, JWT-based sessions            |
-| 👤 User Dashboard   | View & cancel bookings                         |
-| 🧑‍💼 Admin Access  | Manage all bookings                            |
-| ✨ UI/UX             | Dark/light mode, responsive, modern animations |
-| 🔎 Dynamic Search   | Search destinations by name or location        |
-| 🗄️ Persistent Data | Hosted PostgreSQL DB                           |
-
----
-
-### ⚙️ **Tech Stack**
-
-| Layer      | Tech                           |
-| ---------- | ------------------------------ |
-| Frontend   | React + Vite + CSS + Bootstrap |
-| Backend    | Node.js + Express.js           |
-| Database   | PostgreSQL (NeonDB)            |
-| Auth       | JWT + bcryptjs                 |
-| Deployment | Vercel (Web), Render (API)     |
-
----
-
-### 🔗 API Endpoints
-
-#### 🧑‍🎓 Public
-
-| Method | Endpoint               | Description          |
-| ------ | ---------------------- | -------------------- |
-| GET    | `/api/destinations`    | Get all destinations |
-| GET    | `/api/destinations?q=` | Search by query      |
-
-#### 👤 Auth Required
-
-| Method | Endpoint            | Description    |
-| ------ | ------------------- | -------------- |
-| POST   | `/api/bookings`     | Create booking |
-| GET    | `/api/bookings/my`  | User bookings  |
-| DELETE | `/api/bookings/:id` | Cancel booking |
-
-#### 🧑‍💼 Admin
-
-| Method | Endpoint            | Description       |
-| ------ | ------------------- | ----------------- |
-| GET    | `/api/bookings/all` | View all bookings |
-
----
-
-### 🏗️ **Folder Structure**
-
-```
-project/
- ├── backend/
- │   ├── routes/
- │   ├── db.js
- │   ├── server.js
- ├── frontend/
- │   ├── src/
- │   ├── App.jsx
- │   ├── index.html
- ├── package.json
- ├── README.md
+```text
+globe-trek/
+├── backend/
+│   ├── db.js
+│   ├── server.js
+│   └── routes/
+│       ├── auth.js
+│       ├── bookings.js
+│       └── destinations.js
+├── frontend/
+│   ├── app/
+│   │   ├── globals.css
+│   │   ├── layout.js
+│   │   └── page.js
+│   ├── components/
+│   │   └── GlobeTrekExperience.js
+│   ├── lib/
+│   │   └── api.js
+│   ├── next.config.mjs
+│   └── package.json
+├── ARCHITECTURE.md
+├── package.json
+└── README.md
 ```
 
----
+## Environment Variables
 
-### 🔐 Environment Variables
+### Backend
 
-📍 Backend `.env`
+Create `backend/.env`:
 
-```
-DB_HOST=your_neon_host
-DB_NAME=your_db
-DB_USER=your_user
-DB_PASSWORD=your_pass
-DB_PORT=5432
-JWT_SECRET=your_secret
+```env
+DB_URL=postgresql://user:password@host:5432/database
+JWT_SECRET=replace_with_a_strong_secret
+PORT=5000
 ```
 
-📍 Frontend `.env`
+### Frontend
 
+Create `frontend/.env.local` only when overriding the deployed API:
+
+```env
+NEXT_PUBLIC_API_BASE=http://localhost:5000/api
 ```
-VITE_API_BASE=https://globe-trek.onrender.com/api
+
+If `NEXT_PUBLIC_API_BASE` is omitted, the frontend uses:
+
+```text
+https://globe-trek.onrender.com/api
 ```
 
----
+## Run Locally
 
-### 🖥️ **Run Locally**
+Install frontend dependencies:
 
 ```sh
-# Backend
-cd backend
+cd frontend
 npm install
-npm start
+```
 
-# Frontend
-cd ../frontend
-npm install
+Run the Next.js frontend:
+
+```sh
 npm run dev
 ```
 
----
+The frontend runs at:
 
-### 🧑‍💻 Author
+```text
+http://localhost:3000
+```
 
-**Kuppireddy Bhageeratha Reddy**
-📌 GitHub: [https://github.com/kuppireddybhageerathareddy1110](https://github.com/kuppireddybhageerathareddy1110)
+Install backend dependencies:
 
+```sh
+cd ../backend
+npm install
+```
 
----
+Run the Express API:
 
-### 📌 Future Enhancements
+```sh
+node server.js
+```
 
-✔ Online payment integration
-✔ Real-time seat availability
-✔ User reviews & ratings
-✔ Admin panel UI improvements
+The backend runs at:
 
----
+```text
+http://localhost:5000
+```
 
-### ⭐ Support
+You can also run root convenience scripts:
 
-If you like this project, please ⭐ this repo — it really helps!
+```sh
+npm run dev:frontend
+npm run build:frontend
+npm run dev:backend
+```
 
----
+## API Endpoints
 
+| Method | Endpoint | Auth | Description |
+| --- | --- | --- | --- |
+| `GET` | `/api/destinations` | No | List all destinations |
+| `GET` | `/api/destinations?q=term` | No | Search by name or location |
+| `POST` | `/api/auth/register` | No | Register a user |
+| `POST` | `/api/auth/login` | No | Login and receive a JWT |
+| `POST` | `/api/bookings` | Yes | Create a booking |
+| `GET` | `/api/bookings/my` | Yes | List the current user's bookings |
+| `DELETE` | `/api/bookings/:id` | Yes | Cancel a booking owned by the current user |
+| `GET` | `/api/bookings/all` | Admin | List all bookings |
 
-Would you like a **logo + favicon** designed for GlobeTrek? ✨
+## Frontend Features
+
+### Destination Discovery
+
+- Search calls the configured API.
+- If the API is unavailable, local curated fallback destinations keep the UI usable.
+- Mood filters support `Luxury`, `Adventure`, `Culture`, and `Wellness`.
+
+### Planner
+
+- Adjust traveler count and trip length.
+- Calculate total and daily estimates instantly.
+- Submit booking details to the protected booking endpoint.
+
+### Auth and Dashboard
+
+- Login and registration use the existing backend API.
+- Auth state and JWT are stored in `localStorage`.
+- Saved trips are persisted locally.
+- Dashboard cards summarize saved trips and authenticated bookings.
+
+### Visual System
+
+- Glassmorphism panels use blur, translucent surfaces, and soft gradients.
+- Brutalist actions use strong borders, hard shadows, and acid accent colors.
+- Motion includes hero reveal, orbit animation, card entrance, hover scale, story cycling, and floating tickets.
+- `prefers-reduced-motion` is respected.
+
+## Build
+
+```sh
+cd frontend
+npm run build
+```
+
+## Deployment Notes
+
+- Deploy `frontend/` as a Next.js app on Vercel.
+- Deploy `backend/` as a Node/Express service on Render.
+- Configure `NEXT_PUBLIC_API_BASE` in Vercel if using a custom API URL.
+- Configure `DB_URL` and `JWT_SECRET` in Render.
+- `backend/server.js` allows `http://localhost:3000` for local Next.js development.
+
+## Validation Checklist
+
+- `npm install` in `frontend/`
+- `npm run build` in `frontend/`
+- `npm run dev` in `frontend/`
+- Visit `http://localhost:3000`
+- Test destination search and filters
+- Test theme toggle
+- Save a trip and confirm dashboard count updates
+- Try booking while logged out and confirm the login-required notice
+- Login against a running backend and confirm booking/dashboard calls work
